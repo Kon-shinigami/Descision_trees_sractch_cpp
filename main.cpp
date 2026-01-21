@@ -7,17 +7,14 @@
 #include<algorithm>
 using namespace std;
 
-struct LeafNode {
-    LeafNode*left ; 
-    LeafNode* right  ; 
-    float value  ; 
-};
 
 
 struct TreeNode {
   TreeNode* left;
     TreeNode* right;
     float value;
+    float* leaf_status_left ;
+    float*leaf_status_right ;  
 }; 
 
 
@@ -221,7 +218,7 @@ vector<float>get_perfect(vector<pair<float , float>> pr , vector<pair<float , in
   return smallest_gini_imp ; 
 
 }
-vector<vector<float>>leaf_info ; 
+unordered_map<float , pair<float , float>>leaf_info ; 
 vector<float> perfect_variable(vector<vector<float>>data){
     int n = data.size() ; 
     vector<float>row  ; 
@@ -279,11 +276,8 @@ vector<float> perfect_variable(vector<vector<float>>data){
  final_ans.push_back(thresh_data_loc ) ;
  final_ans.push_back( gini_left ) ; 
  final_ans.push_back(gini_right ) ;
- row.push_back( num ) ;
- row.push_back( left_leaf ) ; 
- row.push_back(right_leaf ) ;
- leaf_info.push_back(row) ; 
- 
+ leaf_info[num] = {left_leaf, right_leaf};
+
 }
 
 vector<vector<vector<float>>> new_dataset( vector<float>prev_data  ,vector<vector<float>> data) {
@@ -339,3 +333,28 @@ int main(){
     return 0 ; 
 }
 
+void leaf(TreeNode*tree  , unordered_map<float , pair<float , float>>leaf_info ){
+    if (tree == nullptr  ){
+        return ; 
+    }
+    if (tree->leaf_status_left != nullptr && tree->leaf_status_right != nullptr){
+        return ; 
+    }
+    if (tree->left == nullptr && tree->leaf_status_left == nullptr ){
+      tree->left = new TreeNode() ; 
+      float val = leaf_info[tree->value].first ; 
+      tree->left->value = val ; 
+     tree->leaf_status_left = new float(1.0);
+    }
+    else if  (tree->right ==  nullptr && tree->leaf_status_right == nullptr){
+     tree->right = new TreeNode() ; 
+      float val = leaf_info[tree->value].second ; 
+      tree->right->value = val ;  
+      tree->leaf_status_right = new float(1.0);
+    }
+    if (tree == nullptr && tree->leaf_status_left != nullptr && tree->leaf_status_right != nullptr ){
+        return ; 
+    }
+     leaf(tree->left , leaf_info) ; 
+     leaf(tree->right , leaf_info) ; 
+}
