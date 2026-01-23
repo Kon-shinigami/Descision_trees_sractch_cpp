@@ -17,7 +17,7 @@ struct TreeNode {
     float*leaf_status_right ;  
 }; 
 
-
+unordered_map<float,int>used_variables ; 
 bool isnum (string datapart){
      if( datapart.size() == 0 ){
       return false ; 
@@ -215,11 +215,10 @@ vector<float>get_perfect(vector<pair<float , float>> pr , vector<pair<float , in
 unordered_map<float , pair<float , float>>leaf_info ; 
 
 
-pair<vector<vector<pair<float,pair<float,float>>>>>new_dataset( vector<float>prev_data  ,vector<vector<pair<float , pair<float,float>>>>  data) {
+pair<vector<vector<pair<float,pair<float,float>>>>, vector<vector<pair<float,pair<float,float>>>>>new_dataset( vector<float>prev_data  ,vector<vector<pair<float , pair<float,float>>>>  data) {
     int on_basis = (int)prev_data[2];
     int thresh = (int)prev_data[3];
     int m = data[0].size() ; 
-    pair<vector<vector<pair<float , pair<float,float>>>>>result;
     unordered_map<float , int>left_index ; 
     unordered_map<float , int >right_index ; 
     for (int i = 0 ; i < thresh ; i++ ){
@@ -231,15 +230,19 @@ pair<vector<vector<pair<float,pair<float,float>>>>>new_dataset( vector<float>pre
     vector<vector<pair<float,pair<float,float>>>>left_data ; 
     vector<vector<pair<float,pair<float,float>>>>right_data ; 
     for (int i = 0 ; i < data.size() ; i++ ){
-        for (int j = 0 ; j < data[0].size() ; j++ ){
+        for (int j = 0 ; j < data[i].size() ; j++ ){
+            if (used_variables[i] > 0 ){
+            pair<float,pair<float,float>>vec = {data[i][j].first , {data[i][j].second.first ,data[i][j].second.second}} ; 
             if (left_index[data[i][j].second.first] > 0 ){
-                
+                left_data[i].push_back(vec) ; 
+            }
+            else {
+                 right_data[i].push_back(vec) ; 
             }
         }
     }
-    result.push_back(left_data);
-    result.push_back(right_data);
-    return result;
+    } 
+    return  {left_data,right_data} ; 
 }
 
 
@@ -250,7 +253,8 @@ void rec(vector<vector<pair<float , pair<float,float>>>>  dta , int i  , int n  
     }
     vector<float>thing = perfect_variable(dta) ; 
     tree->value = thing[1] ; 
-    pair<vector<vector< pair<float , pair<float,float> > >>>data_sm  = new_dataset(thing  , dta);
+    used_variables[thing[2]]++ ; 
+    pair<vector<vector<pair<float,pair<float,float>>>>, vector<vector<pair<float,pair<float,float>>>>>data_sm  = new_dataset(thing  , dta);
     vector<vector<pair<float , pair<float,float>>>> left_part = data_sm.first  ; 
     vector<vector<pair<float , pair<float,float>>>> right_part = data_sm.second ; 
     if (thing[4] > 0.01){
