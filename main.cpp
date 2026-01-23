@@ -18,21 +18,34 @@ struct TreeNode {
 }; 
 
 unordered_map<float,int>used_variables ; 
+
 bool isnum (string datapart){
      if( datapart.size() == 0 ){
       return false ; 
      }
+     bool dot = false ; 
      for (int i = 0 ; i < datapart.size() ; i++ ){
      char st = datapart[i] ; 
      if (i == 0 ){
      if ( isdigit(st) ==  0 && st != '-' && st != '.') {
         return false ; 
      }
+     if (st == '.'){
+        dot = true ; 
+     }
     }
+    else {
      if ( isdigit(st) ==  0 && st != '.' ) {
         return false ; 
      }
+     if (st == '.' && dot == true){
+        return false ; 
      }
+     if (st == '.'){
+        dot = true ; 
+     }
+     }
+    }
      return true  ; 
 }
 
@@ -41,6 +54,7 @@ bool isnum (string datapart){
    vector<unordered_map<string,float>>hash   ; 
     
    string line  ;
+   int i = 0 ;
    vector<vector<float>>data ; 
    vector<float> code  ; 
    ifstream file("data.csv");
@@ -74,6 +88,8 @@ bool isnum (string datapart){
             }
 
         }
+        i++ ; 
+        first = true ; 
     }
     if (skip == false ){
         data.push_back(row) ; 
@@ -103,6 +119,7 @@ float gini_impurity_subtree(vector<float>&counts ){
 
 vector<float> gini_impurity_tree(vector<float> &right_subtree , vector<float>& left_subtree){
     int n = right_subtree.size() ; 
+    int m = left_subtree.size() ;
     vector<float>ans ; 
     float max_right  = 0.0 ; 
     float r = 0.0 ; 
@@ -116,7 +133,6 @@ vector<float> gini_impurity_tree(vector<float> &right_subtree , vector<float>& l
     }
     }
     float l = 0.0 ; 
-    int m = left_subtree.size() ;
     float max_left = 0.0 ;
     for (int j = 0 ; j< m ; j++ ){
         l = l + left_subtree[j] ; 
@@ -165,7 +181,7 @@ vector<float>get_perfect(vector<pair<float , float>> pr , vector<pair<float , in
     float gini_right = 0.0;
     float left_leaf = 0.0 ; 
     float right_leaf = 0.0 ; 
-
+    
 
     if (pos.size() == 0) {
         smallest_gini_imp.push_back(0.0);
@@ -173,19 +189,25 @@ vector<float>get_perfect(vector<pair<float , float>> pr , vector<pair<float , in
         smallest_gini_imp.push_back(100.0);
         smallest_gini_imp.push_back(0.0);
         smallest_gini_imp.push_back(0.0);
+        smallest_gini_imp.push_back(0.0);
+        smallest_gini_imp.push_back(0.0);
         return smallest_gini_imp;
     }
 
 
-    for (int i = 0 ; i < m ; i++ ){
-     hash_right[pr[i].second] = hash_right[pr[i].second] + 1.0 ; 
+    unordered_map<float, int> target_index;
+    for (int i = 0; i < n; i++) {
+     target_index[target_things[i]] = i;
     }
 
+    for (int i = 0 ; i < m ; i++ ){
+     hash_right[target_index[pr[i].second]] = hash_right[target_index[pr[i].second]] + 1.0 ; 
+    }
 
     for (int i = 0 ; i< pos.size() ; i++ ){
      int g = pos[i].second ; 
-     hash_left[pr[g].second] = hash_left[pr[g].second] + 1.0 ; 
-     hash_right[pr[g].second] = hash_right[pr[g].second] - 1.0 ; 
+     hash_left[target_index[pr[g].second]] = hash_left[target_index[pr[g].second]] + 1.0 ; 
+     hash_right[target_index[pr[g].second]] = hash_right[target_index[pr[g].second]] - 1.0 ; 
      gini_imp = gini_impurity_tree(hash_right  , hash_left) ; 
      gini_cmp = gini_imp[0] ; 
 
@@ -229,6 +251,8 @@ pair<vector<vector<pair<float,pair<float,float>>>>, vector<vector<pair<float,pai
     }
     vector<vector<pair<float,pair<float,float>>>>left_data ; 
     vector<vector<pair<float,pair<float,float>>>>right_data ; 
+    left_data.resize(data.size());   
+    right_data.resize(data.size());
     for (int i = 0 ; i < data.size() ; i++ ){
         for (int j = 0 ; j < data[i].size() ; j++ ){
             if (used_variables[i] > 0 ){
@@ -248,7 +272,7 @@ pair<vector<vector<pair<float,pair<float,float>>>>, vector<vector<pair<float,pai
 
 
 void rec(vector<vector<pair<float , pair<float,float>>>>  dta , int i  , int n  , TreeNode*tree){
-    if (i > 9 || n == 0 ){
+    if (i > 9 || n == 0 || dta.empty() || dta[0].empty()){
         return  ; 
     }
     vector<float>thing = perfect_variable(dta) ; 
@@ -272,9 +296,11 @@ void rec(vector<vector<pair<float , pair<float,float>>>>  dta , int i  , int n  
 int main(){
     TreeNode* tree = new TreeNode() ; 
     int i  = 0 ; 
+    
     vector<vector<float>>data_set = data() ; 
     vector<vector<pair<float , pair<float,float>>>>  data_new = sorted_dataset(data_set) ; 
     int size = data_new[0].size() ; 
+    unique_target(data_set);
     rec(data_new , i , size , tree ) ; 
     leaf(tree , leaf_info) ; 
     return 0 ; 
@@ -318,12 +344,12 @@ vector<vector<pair<float , pair<float,float>>>> sorted_dataset(vector<vector<flo
     pair<float,float>temp ; 
     pair<float,pair<float,float>>temp_data ; 
 
-    for (int i = 0 ;  i< n ; i++){
+    for (int i = 0 ;  i< n-1 ; i++){
         for (int j = 0 ; j < m ; j++ ){
             num = data[i][j] ; 
             target = data[n-1][j] ; 
+             index = (float)j ; 
             temp = {index , target} ; 
-            index = (float)j ; 
             temp_data = {num,temp} ; 
             data_info[i].push_back(temp_data) ; 
         }
@@ -353,18 +379,21 @@ for (int i = 0 ; i < target.size() ; i++){
 vector<float> perfect_variable(vector<vector<pair<float , pair<float,float>>>> data_new){
     int n = data_new.size() ; 
     vector<float>row  ; 
-    float variable_pos  ; 
+    float variable_pos   = 0.0 ; 
     float left_leaf = 0.0 ; 
     float right_leaf = 0.0 ; 
-    float thresh_data_loc ; 
+    float thresh_data_loc = 0.0 ; 
     vector<float>final_ans ; 
-    float gini_left ; 
-    float gini_right ; 
+    float gini_left  = 0.0 ; 
+    float gini_right = 0.0 ; 
      float gini ; 
      float gini_impurity  = 100 ; 
-     float num ; 
+     float num  = 0.0 ; 
 
     for ( int i = 0 ; i< n-1 ; i++){
+        if (data_new[i].size() <= 1 ){
+            continue ; 
+        }
         vector<pair<float  , float>> pr ; 
         for (int j = 0  ; j < data_new[i].size() ; j++ ){
             pr.push_back({data_new[i][j].first , data_new[i][j].second.second}) ; 
