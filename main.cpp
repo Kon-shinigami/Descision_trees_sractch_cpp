@@ -327,7 +327,7 @@ vector<vector<pair<float , pair<float,float>>>> sorted_dataset(vector<vector<flo
             temp_data = {num,temp} ; 
             data_info[i].push_back(temp_data) ; 
         }
-        sort(data_info.begin() , data_info.end()) ;
+        sort(data_info[i].begin() , data_info[i].end()) ;
     }
     return data_info ; 
 }
