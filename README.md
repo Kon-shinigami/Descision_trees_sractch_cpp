@@ -1,1 +1,1 @@
-Implemented Entire Descision Trees from sctrch in c++ 
+Implemented Entire Random forest and Descision Trees algorithms from sctrch in c++ 
